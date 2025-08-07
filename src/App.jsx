@@ -14,19 +14,31 @@ function App() {
   }, []);
 
   const handleVoiceInput = (question) => {
-    const spokenWords = question.toLowerCase().split(" ");
+    const stopWords = ['what', 'is', 'your', 'the', 'a', 'an', 'do', 'you', 'are', 'how', 'can', 'i'];
+    const spokenWords = question
+      .toLowerCase()
+      .split(" ")
+      .filter(word => !stopWords.includes(word)); // Remove stop words
+
+    let bestMatch = "";
+    let highestMatchCount = 0;
 
     for (let key in data) {
       const lowerKey = key.toLowerCase();
       const matchCount = spokenWords.filter(word => lowerKey.includes(word)).length;
 
-      if (matchCount >=3) {
-        setAnswer(data[key]);
-        return;
+      if (matchCount > highestMatchCount) {
+        highestMatchCount = matchCount;
+        bestMatch = key;
       }
     }
 
-    setAnswer("Sorry, I don't know the answer to that.");
+    // Only respond if meaningful match found
+    if (highestMatchCount >= 1) {
+      setAnswer(data[bestMatch]);
+    } else {
+      setAnswer("Sorry, I don't know the answer to that.");
+    }
   };
 
   return (
