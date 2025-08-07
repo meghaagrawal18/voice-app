@@ -1,37 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import nlp from 'compromise';
 import VoiceInput from './components/VoiceInput';
 import VoiceOutput from './components/VoiceOutput';
 
 function App() {
-  const [data, setData] = useState({});
   const [answer, setAnswer] = useState("");
 
-  useEffect(() => {
-    fetch('/questions.json')
-      .then(res => res.json())
-      .then(setData)
-      .catch(err => console.error("Failed to load Q&A data", err));
-  }, []);
+  const answers = {
+    skills: "I have experience with React, JavaScript, Node.js, Express, MongoDB, and PostgreSQL.",
+    name: "My name is Prisha.",
+    about: "I'm a software developer with a strong interest in building user-friendly web applications.",
+    unknown: "Sorry, I don't know the answer to that.",
+  };
 
-  const handleVoiceInput = (question) => {
-    const spokenWords = question.toLowerCase().split(" ");
-
-    for (let key in data) {
-      const lowerKey = key.toLowerCase();
-      const matchCount = spokenWords.filter(word => lowerKey.includes(word)).length;
-
-      if (matchCount >=3) {
-        setAnswer(data[key]);
-        return;
-      }
+  function getIntent(text) {
+    const doc = nlp(text.toLowerCase());
+    if (doc.has('skills') || doc.has('ability') || doc.has('experience')) {
+      return 'skills';
     }
+    if (doc.has('name')) {
+      return 'name';
+    }
+    if (doc.has('yourself') || doc.has('who')) {
+      return 'about';
+    }
+    return 'unknown';
+  }
 
-    setAnswer("Sorry, I don't know the answer to that.");
+  const handleVoiceInput = (spokenText) => {
+    const intent = getIntent(spokenText);
+    setAnswer(answers[intent]);
   };
 
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h1>🎤 Voice Q&A App</h1>
+      <h1>🎤 Voice Q&A with Compromise</h1>
       <VoiceInput onResult={handleVoiceInput} />
       <VoiceOutput text={answer} />
     </div>
